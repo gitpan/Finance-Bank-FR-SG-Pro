@@ -1,0 +1,152 @@
+NAME
+    Finance::Bank::FR::SG::Pro - Check your Société Générale Professional
+    accounts from Perl
+
+VERSION
+    Version 0.1
+
+SYNOPSIS
+     use Finance::Bank::FR::SG::Pro;
+
+     my $account=Finance::Bank::FR::SG::Pro->check_balance(
+       username => "01234567",
+       password => "123456",
+       account => '11111 22222 333333333333', ## if not specified you get back an array with all accounts
+      );
+
+     print "BALANCE: ".$account->balance();
+     foreach my $s ($account->statements())
+     {
+      print "Statement"
+      print "\tType:".$s->type()."\n";
+      print "\tDate:".$s->date()."\n";
+      print "\tAmount:".$s->amount()."\n";
+      print "\tDescription:".$s->description()."\n";
+     }
+
+DESCRIPTION
+    This module provides a rudimentary interface to the Société Générale
+    Progéliance Net online banking system for professional accounts at
+    <http://www.societegenerale.fr/>. You will need either Crypt::SSLeay or
+    IO::Socket::SSL installed for HTTPS support to work with LWP.
+
+    The interface of this module is strongly modeled after the one from
+    Briac Pilpré's Finance::Bank::BNPParibas and Cédric Bouvier's
+    Finance::Bank::CreditMut.
+
+    All dates are normalized to the standard format: YYYY-MM-DD. All amounts
+    are given as proper numbers, with '.' as fractional separator.
+
+WARNING
+    This is code for online banking, and that means your money, and that
+    means BE CAREFUL. You are encouraged, nay, expected, to audit the source
+    of this module yourself to reassure yourself that I am not doing
+    anything untoward with your banking data. This software is useful to me,
+    but is provided under NO GUARANTEE, explicit or implied.
+
+METHODS
+  check_balance( username => $username, password => $password, account => $account)
+    Returns a list of account objects (Finance::Bank::SG::Pro::Account
+    class) if no account specified, or otherwise a single object being the
+    account requested. All parameters must be given as strings. Spaces in
+    account number are irrelevant.
+
+Account methods
+  sort_code()
+    Returns the sort code of the account. Currently, it returns an undefined
+    value.
+
+  bank()
+    Returns the name of the bank.
+
+  name()
+    Returns the human-readable name of the account. We handle only accounts
+    being of type 'CTE ENTR'.
+
+  account_no()
+    Returns the account number.
+
+  balance()
+    In scalar context, returns the balance of the account. In list context,
+    returns an array with the balance amount, and the balance date.
+
+  currency()
+    Returns the currency of the account.
+
+  statements()
+    Returns a list of statement objects
+    (Finance::Bank::FR::SG::Pro::Statement class).
+
+Statement methods
+  date()
+    Returns the date when the statement occured.
+
+  value_date()
+    Returns the date of value of the statement.
+
+  description()
+    Returns the unparsed description given by the bank for the statement.
+
+  description_details()
+    For some types of statement (see below), we do extra parsing of the
+    description and/or fields. This method returns an extra hashref with the
+    result of the parse, as specified below.
+
+    For type ``CHEQUES'', the hashref contains up to two keys: check_number
+    and bank_ref (optional).
+
+    For type ``PRELEVEMENTS'', the hasref contains three keys: number, by
+    and details (being an arrayref of lines parsed from the comment field).
+
+    For type ``COMMISSIONS ET FRAIS DIVERS'', the hashref may contain the
+    following keys: montant_ht (for the amount before taxes), montant_nt
+    (for the amount without taxes), tva being an hashref whose keys are the
+    VAT percentage (as real number) and value is the amount to be added for
+    this VAT.
+
+    For type ``FACTURES CARTES PAYEES'', the hashref contains the following
+    keys: details (being an array ref of lines parsed from the comment
+    field), card_number (being the full card number used), merchant_name
+    (string), operation_date and for credit card payment abroad there are
+    also those following keys: debit_amount (true amount being paid
+    initially) debit_amount_currency (currency of the amount given in
+    debit_amount) transaction_fee (for the bank due to the currency
+    conversion).
+
+  amount()
+    In scalar context, returns the amount of the statement. In list context,
+    returns an array with the amount, and the currency of the statement.
+
+  comment()
+    Returns the unparsed comment part of the statement.
+
+  type()
+    Returns the type of this statement.
+
+  as_string()
+    Returns a tab-delimited representation of the statement. By default, it
+    uses a tabulation to separate the fields, but the user can provide its
+    own separator.
+
+COPYRIGHT & LICENSE
+    Copyright 2004 Patrick Mevzek, All Rights Reserved. Released under the
+    GPL License.
+
+AUTHOR
+    Patrick Mevzek "<pmevzek@cpan.org>"
+
+    This work has been sponsored by and done for Dot and Co
+    <http://www.dotandco.com>.
+
+    Thanks to Andy Lester for its WWW::Mechanize wonder, and other authors
+    of Finance::Bank::* modules
+
+BUGS
+    Please report any bugs or feature requests to
+    "bug-finance-bank-fr-sg-pro@rt.cpan.org", or through the web interface
+    at <http://rt.cpan.org>. I will be notified, and then you'll
+    automatically be notified of progress on your bug as I make changes.
+
+SEE ALSO
+    Finance::Bank::CreditMut, Finance::Bank::BNPParibas, WWW::Mechanize
+
